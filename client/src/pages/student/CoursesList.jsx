@@ -7,30 +7,45 @@ import { assets } from '../../assets/assets';
 import Footer from '../../components/student/Footer';
 import { FaRobot } from "react-icons/fa";
 import RagChat from '../../components/chat/RagChat';
+import axios from 'axios';
 
 const CoursesList = () => {
-  const { navigate, allCourses } = useContext(AppContext);
+  const { navigate } = useContext(AppContext);
   const { input } = useParams();
   const [showRagModal, setShowRagModal] = useState(false);
   const [filteredCourse, setFilteredCourse] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
-    setIsLoading(true);
-    if (allCourses && allCourses.length > 0) {
-      const tempCourses = allCourses.slice();
+    const fetchCourses = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axios.get('https://learnify.runasp.net/api/Course/GetAllCoursesstudent');
+        const courses = response.data.data;
 
-      input
-        ? setFilteredCourse(
-            tempCourses.filter(
+        if (input) {
+          setFilteredCourse(
+            courses.filter(
               (item) =>
-                item.courseTitle.toLowerCase().includes(input.toLowerCase())
+                item.name.toLowerCase().includes(input.toLowerCase()) ||
+                item.course_category.toLowerCase().includes(input.toLowerCase())
             )
-          )
-        : setFilteredCourse(tempCourses);
-    }
-    setTimeout(() => setIsLoading(false), 1000);
-  }, [allCourses, input]);
+          );
+        } else {
+          setFilteredCourse(courses);
+        }
+        setError(null);
+      } catch (err) {
+        setError('Failed to fetch courses. Please try again later.');
+        console.error('Error fetching courses:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, [input]);
 
   return (
     <>
@@ -74,6 +89,20 @@ const CoursesList = () => {
           </div>
         )}
 
+        {/* Error Message */}
+        {error && (
+          <div className="col-span-full py-12 px-4">
+            <div className="max-w-md mx-auto bg-red-50 p-6 rounded-lg shadow-md">
+              <h3 className="text-lg sm:text-xl font-semibold text-red-800 mb-2">
+                Error
+              </h3>
+              <p className="text-sm sm:text-base text-red-600">
+                {error}
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Course Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 my-8 sm:my-12">
           {isLoading ? (
@@ -81,8 +110,8 @@ const CoursesList = () => {
               <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
             </div>
           ) : filteredCourse.length > 0 ? (
-            filteredCourse.map((course, index) => (
-              <CourseCard key={index} course={course} />
+            filteredCourse.map((course) => (
+              <CourseCard key={course.id} course={course} />
             ))
           ) : (
             <div className="col-span-full py-12 px-4">

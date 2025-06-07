@@ -24,6 +24,7 @@ import RecommendedCourseList from "./pages/student/RecommendedCourseList";
 // import Payment Components
 import Payment from "./pages/student/payment/Payment";
 import PaymentSuccess from "./pages/student/payment/PaymentSuccess";
+import PaymentCancel from "./pages/student/payment/PaymentCancel";
 
 // import todo
 import TodoPage from './pages/student/todos/Todos';
@@ -211,9 +212,14 @@ const App = () => {
                   <Payment />
                 </ProtectedRoute>
               } />
-              <Route path="/payment/success/:courseId" element={
+              <Route path="/payment/success" element={
                 <ProtectedRoute allowedRoles={['student']}>
                   <PaymentSuccess />
+                </ProtectedRoute>
+              } />
+              <Route path="/payment/cancel" element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <PaymentCancel />
                 </ProtectedRoute>
               } />
 

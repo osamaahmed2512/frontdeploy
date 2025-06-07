@@ -1,17 +1,37 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { AppContext } from '../../context/AppContext';
 import CourseCard from './CourseCard';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Pagination, Autoplay } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
+import axios from 'axios';
 
 const CoursesSection = () => {
-  const { allCourses } = useContext(AppContext);
   const swiperRef = useRef(null);
   const [isBeginning, setIsBeginning] = useState(true);
   const [isEnd, setIsEnd] = useState(false);
+  const [courses, setCourses] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        setIsLoading(true);
+        const response = await axios.get('https://learnify.runasp.net/api/Course/GetAllCoursesstudent');
+        setCourses(response.data.data);
+        setError(null);
+      } catch (err) {
+        setError('Failed to fetch courses');
+        console.error('Error fetching courses:', err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCourses();
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -85,54 +105,64 @@ const CoursesSection = () => {
             `}
           </style>
 
-          <Swiper
-            ref={swiperRef}
-            modules={[Pagination, Autoplay]}
-            pagination={{ 
-              clickable: true,
-              dynamicBullets: true
-            }}
-            slidesPerView={4}
-            spaceBetween={20}
-            loop={true}
-            autoplay={{
-              delay: 3000,
-              disableOnInteraction: false,
-              pauseOnMouseEnter: true
-            }}
-            speed={800}
-            onSlideChange={handleSlideChange}
-            breakpoints={{
-              320: { 
-                slidesPerView: 1,
-                spaceBetween: 15
-              },
-              640: { 
-                slidesPerView: 2,
-                spaceBetween: 20
-              },
-              768: { 
-                slidesPerView: 3,
-                spaceBetween: 20
-              },
-              1024: { 
-                slidesPerView: 4,
-                spaceBetween: 20
-              }
-            }}
-            className="course-slider"
-          >
-            {allCourses.slice(0, 8).map((course, index) => (
-              <SwiperSlide key={index} className="course-slide">
-                <CourseCard course={course} />
-              </SwiperSlide>
-            ))}
-          </Swiper>
+          {isLoading ? (
+            <div className="flex justify-center items-center py-16">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500"></div>
+            </div>
+          ) : error ? (
+            <div className="text-center py-8">
+              <p className="text-red-500">{error}</p>
+            </div>
+          ) : (
+            <Swiper
+              ref={swiperRef}
+              modules={[Pagination, Autoplay]}
+              pagination={{
+                clickable: true,
+                dynamicBullets: true
+              }}
+              slidesPerView={4}
+              spaceBetween={20}
+              loop={true}
+              autoplay={{
+                delay: 3000,
+                disableOnInteraction: false,
+                pauseOnMouseEnter: true
+              }}
+              speed={800}
+              onSlideChange={handleSlideChange}
+              breakpoints={{
+                320: {
+                  slidesPerView: 1,
+                  spaceBetween: 15
+                },
+                640: {
+                  slidesPerView: 2,
+                  spaceBetween: 20
+                },
+                768: {
+                  slidesPerView: 3,
+                  spaceBetween: 20
+                },
+                1024: {
+                  slidesPerView: 4,
+                  spaceBetween: 20
+                }
+              }}
+              className="course-slider"
+            >
+              {courses.slice(0, 8).map((course) => (
+                <SwiperSlide key={course.id} className="course-slide">
+                  <CourseCard course={course} />
+                </SwiperSlide>
+              ))}
+            </Swiper>
+          )}
 
           <div className="mb-15">
-            <Link 
-              to="/course-list" 
-              onClick={() => scrollTo(0, 0)} 
+            <Link
+              to="/course-list"
+              onClick={() => scrollTo(0, 0)}
               className="inline-block px-8 py-3 bg-transparent text-sky-500 font-semibold rounded-lg
                 transition-all duration-300 hover:bg-sky-500 hover:text-white
                 border-2 border-sky-500 hover:shadow-lg hover:-translate-y-1"

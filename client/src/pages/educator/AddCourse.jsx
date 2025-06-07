@@ -58,17 +58,18 @@ const AddCourse = () => {
     'Advanced'
   ];
 
-  const [courseTitle, setCourseTitle] = useState('')
-  const [coursePrice, setCoursePrice] = useState(0)
-  const [discount, setDiscount] = useState(0)
-  const [image, setImage] = useState(null)
-  const [chapters, setChapters] = useState([])
+  const [courseTitle, setCourseTitle] = useState('');
+  const [coursePrice, setCoursePrice] = useState(0);
+  const [discount, setDiscount] = useState(0);
+  const [image, setImage] = useState(null);
+  const [chapters, setChapters] = useState([]);
   const [showPopup, setShowPopup] = useState(false);
   const [currentChapterId, setCurrentChapterId] = useState(null);
   const [tags, setTags] = useState([]);
   const [tagInput, setTagInput] = useState('');
   const [category, setCategory] = useState('');
   const [level, setLevel] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [lectureDetails, setLectureDetails] = useState({
     lectureTitle: '',
@@ -78,6 +79,77 @@ const AddCourse = () => {
 
   const [courseCategories, setCourseCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
+
+  // Retry mechanism for API calls
+  const retryRequest = async (fn, maxRetries = 3, delay = 1000) => {
+    for (let i = 0; i < maxRetries; i++) {
+      try {
+        return await fn();
+      } catch (error) {
+        if (i === maxRetries - 1) throw error;
+        await new Promise(res => setTimeout(res, delay * (i + 1)));
+      }
+    }
+  };
+
+  // File validation
+  const validateFile = (file, allowedTypes, maxSizeMB) => {
+    const allowedTypesRegex = new RegExp(`^(${allowedTypes.join('|')})$`, 'i');
+    if (!allowedTypesRegex.test(file.type)) {
+      return `File type not allowed. Allowed types: ${allowedTypes.join(', ')}`;
+    }
+    if (file.size > maxSizeMB * 1024 * 1024) {
+      return `File too large. Maximum size: ${maxSizeMB}MB`;
+    }
+    return null;
+  };
+
+  // Enhanced video upload with progress
+  const uploadVideoWithProgress = async (file, sectionId, title) => {
+    const formData = new FormData();
+    formData.append('Title', title);
+    formData.append('SectionId', sectionId);
+    formData.append('video', file);
+
+    const toastId = toast.loading(`Uploading video: 0%`, {
+      position: "bottom-right"
+    });
+
+    try {
+      const response = await axios.post(
+        'https://learnify.runasp.net/api/Lesson',
+        formData,
+        {
+          timeout: 300000, // 5 minutes timeout
+          onUploadProgress: (progressEvent) => {
+            const percentCompleted = Math.round(
+              (progressEvent.loaded * 100) / progressEvent.total
+            );
+            toast.update(toastId, {
+              render: `Uploading video: ${percentCompleted}%`,
+              isLoading: true
+            });
+          }
+        }
+      );
+      
+      toast.update(toastId, {
+        render: "Video uploaded successfully!",
+        type: "success",
+        isLoading: false,
+        autoClose: 3000
+      });
+      return response;
+    } catch (error) {
+      toast.update(toastId, {
+        render: "Video upload failed",
+        type: "error",
+        isLoading: false,
+        autoClose: 3000
+      });
+      throw error;
+    }
+  };
 
   const handleTagInput = (e) => {
     if (e.key === 'Enter' && tagInput.trim()) {
@@ -136,11 +208,25 @@ const AddCourse = () => {
   const handleVideoUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      const validationError = validateFile(file, ['video/mp4', 'video/webm', 'video/ogg'], 100);
+      if (validationError) {
+        showToast.error(validationError);
+        return;
+      }
       setLectureDetails({ ...lectureDetails, lectureVideo: file });
     }
   };
 
   const addLecture = () => {
+    if (!lectureDetails.lectureTitle.trim()) {
+      showToast.error('Lecture title is required');
+      return;
+    }
+    if (!lectureDetails.lectureVideo) {
+      showToast.error('Lecture video is required');
+      return;
+    }
+
     setChapters(
       chapters.map((chapter) => {
         if (chapter.chapterId === currentChapterId) {
@@ -164,29 +250,86 @@ const AddCourse = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Validation
-    const description = quillRef.current ? quillRef.current.root.innerHTML.trim() : '';
-    if (!courseTitle.trim() || !description || !category || !level || tags.length === 0 || !coursePrice || !image || chapters.length === 0) {
-      showToast.error('Please fill in all required fields and add at least one chapter.');
-      return;
-    }
-    for (const chapter of chapters) {
-      if (!chapter.chapterTitle.trim()) {
-        showToast.error('Each chapter must have a title.');
+    setIsSubmitting(true);
+    
+    try {
+      const description = quillRef.current ? quillRef.current.root.innerHTML.trim() : '';
+      
+      // Validate required fields
+      if (!courseTitle.trim()) {
+        showToast.error('Course title is required');
         return;
       }
-      if (chapter.chapterContent.length === 0) {
-        showToast.error('Each chapter must have at least one lecture.');
+      
+      if (!description) {
+        showToast.error('Course description is required');
         return;
       }
-      for (const lecture of chapter.chapterContent) {
-        if (!lecture.lectureTitle.trim() || !lecture.lectureVideo) {
-          showToast.error('Each lecture must have a title and a video.');
+      
+      if (!category) {
+        showToast.error('Course category is required');
+        return;
+      }
+      
+      if (!level) {
+        showToast.error('Course level is required');
+        return;
+      }
+      
+      if (tags.length === 0) {
+        showToast.error('At least one tag is required');
+        return;
+      }
+      
+      if (!coursePrice || isNaN(Number(coursePrice))) {
+        showToast.error('Valid course price is required');
+        return;
+      }
+      
+      if (!image) {
+        showToast.error('Course thumbnail is required');
+        return;
+      }
+      
+      if (chapters.length === 0) {
+        showToast.error('At least one chapter is required');
+        return;
+      }
+
+      // Validate chapters and lectures
+      for (const chapter of chapters) {
+        if (!chapter.chapterTitle.trim()) {
+          showToast.error(`Chapter ${chapter.chapterOrder} must have a title`);
           return;
         }
+        
+        if (chapter.chapterContent.length === 0) {
+          showToast.error(`Chapter "${chapter.chapterTitle}" must have at least one lecture`);
+          return;
+        }
+        
+        for (const lecture of chapter.chapterContent) {
+          if (!lecture.lectureTitle.trim()) {
+            showToast.error(`All lectures must have a title in chapter "${chapter.chapterTitle}"`);
+            return;
+          }
+          
+          if (!lecture.lectureVideo) {
+            showToast.error(`All lectures must have a video in chapter "${chapter.chapterTitle}"`);
+            return;
+          }
+        }
       }
-    }
-    try {
+
+      showToast.warning('Uploading course... Please wait');
+
+      // Track successful uploads
+      const uploadResults = {
+        course: false,
+        chapters: [],
+        lectures: []
+      };
+
       // 1. Add Course
       const formData = new FormData();
       formData.append('Name', courseTitle.trim());
@@ -197,56 +340,122 @@ const AddCourse = () => {
       formData.append('Price', Number(coursePrice));
       formData.append('Discount', discount === '' || isNaN(Number(discount)) ? 0 : Number(discount));
       formData.append('Image', image);
-      const courseRes = await axios.post('https://learnify.runasp.net/api/Course/AddCourse', formData);
-      if (!courseRes.data || !courseRes.data.id) {
-        showToast.error('Failed to create course.');
-        return;
-      }
-      const courseId = courseRes.data.id;
-      // 2. Add Sections (Chapters)
-      for (const chapter of chapters) {
-        const sectionRes = await axios.post('https://learnify.runasp.net/api/Section/AddSection', {
-          name: chapter.chapterTitle,
-          course_id: courseId
-        }, {
-          headers: {
-            'Content-Type': 'application/json'
+
+      try {
+        const courseRes = await retryRequest(() => 
+          axios.post(
+            'https://learnify.runasp.net/api/Course/AddCourse', 
+            formData,
+            {
+              timeout: 120000,
+              headers: { 'Content-Type': 'multipart/form-data' }
+            }
+          )
+        );
+        
+        if (courseRes.data?.id) {
+          uploadResults.course = true;
+          const courseId = courseRes.data.id;
+
+          // 2. Upload Chapters and Lectures
+          for (const [chapterIndex, chapter] of chapters.entries()) {
+            const chapterResult = {
+              id: chapter.chapterId,
+              title: chapter.chapterTitle,
+              success: false,
+              lectures: []
+            };
+
+            try {
+              const sectionRes = await retryRequest(() =>
+                axios.post(
+                  'https://learnify.runasp.net/api/Section/AddSection',
+                  {
+                    name: chapter.chapterTitle,
+                    course_id: courseId
+                  },
+                  { timeout: 30000 }
+                )
+              );
+
+              if (sectionRes.data?.id) {
+                chapterResult.success = true;
+                const sectionId = sectionRes.data.id;
+
+                // 3. Upload Lectures
+                for (const [lectureIndex, lecture] of chapter.chapterContent.entries()) {
+                  const lectureResult = {
+                    id: lecture.lectureId,
+                    title: lecture.lectureTitle,
+                    success: false
+                  };
+
+                  try {
+                    await uploadVideoWithProgress(
+                      lecture.lectureVideo,
+                      sectionId,
+                      lecture.lectureTitle
+                    );
+                    lectureResult.success = true;
+                  } catch (lectureError) {
+                    console.error(`Lecture upload failed:`, lectureError);
+                    // Continue with next lecture
+                  }
+
+                  chapterResult.lectures.push(lectureResult);
+                }
+              }
+            } catch (chapterError) {
+              console.error(`Chapter upload failed:`, chapterError);
+              // Continue with next chapter
+            }
+
+            uploadResults.chapters.push(chapterResult);
           }
-        });
-        if (!sectionRes.data || !sectionRes.data.id) {
-          showToast.error(`Failed to add chapter: ${chapter.chapterTitle}`);
-          return;
         }
-        const sectionId = sectionRes.data.id;
-        // 3. Add Lessons (Lectures)
-        for (const lecture of chapter.chapterContent) {
-          const lessonForm = new FormData();
-          lessonForm.append('Title', lecture.lectureTitle);
-          lessonForm.append('SectionId', sectionId);
-          lessonForm.append('video', lecture.lectureVideo);
-          await axios.post('https://learnify.runasp.net/api/Lesson', lessonForm);
-        }
+      } catch (courseError) {
+        throw new Error(`Course creation failed: ${courseError.message}`);
       }
-      showToast.success('Course, chapters, and lectures added successfully!');
-      // Reset form
-      setCourseTitle('');
-      if (quillRef.current) quillRef.current.root.innerHTML = '';
-      setCategory('');
-      setLevel('');
-      setTags([]);
-      setTagInput('');
-      setCoursePrice(0);
-      setDiscount(0);
-      setImage(null);
-      setChapters([]);
+
+      // Verify results
+      const successfulChapters = uploadResults.chapters.filter(c => c.success);
+      const successfulLectures = successfulChapters.flatMap(c => 
+        c.lectures.filter(l => l.success)
+      );
+
+      if (uploadResults.course && successfulChapters.length > 0) {
+        showToast.success(
+          `Course uploaded with ${successfulChapters.length} chapters ` +
+          `and ${successfulLectures.length} lectures!`
+        );
+        
+        // Reset form
+        setCourseTitle('');
+        if (quillRef.current) quillRef.current.root.innerHTML = '';
+        setCategory('');
+        setLevel('');
+        setTags([]);
+        setTagInput('');
+        setCoursePrice(0);
+        setDiscount(0);
+        setImage(null);
+        setChapters([]);
+      } else {
+        showToast.warning(
+          'Course partially uploaded. ' +
+          `${successfulChapters.length} chapters succeeded.`
+        );
+      }
+
     } catch (error) {
-      let errorMessage = 'An error occurred while adding the course.';
-      if (error.response?.data?.message) {
-        errorMessage = error.response.data.message;
-      } else if (error.response?.data) {
-        errorMessage = JSON.stringify(error.response.data);
-      }
-      showToast.error(errorMessage);
+      console.error('Upload failed:', error);
+      showToast.error(
+        error.response?.data?.message || 
+        error.message || 
+        'An unknown error occurred'
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -317,7 +526,6 @@ const AddCourse = () => {
           font-size: 1.05rem;
           padding: 0.7rem 1rem;
         }
-        /* Option hover effect (not supported in all browsers, but works in most modern ones) */
         .custom-select option:hover {
           background: #e0e7ff !important;
         }
@@ -430,7 +638,14 @@ const AddCourse = () => {
                   accept="image/*" 
                   hidden 
                 />
-                <img className='max-h-10' src={image ? URL.createObjectURL(image) : ''} alt="" />
+                <img 
+                  className='max-h-10' 
+                  src={image ? URL.createObjectURL(image) : assets.default_course_image} 
+                  alt="Course thumbnail"
+                  onError={(e) => {
+                    e.target.src = assets.default_course_image;
+                  }}
+                />
               </label>
             </div>
           </div>
@@ -592,9 +807,10 @@ const AddCourse = () => {
 
           <button 
             type="submit" 
-            className='bg-black text-white w-max py-2.5 px-8 rounded my-4 cursor-pointer'
+            className='bg-black text-white w-max py-2.5 px-8 rounded my-4 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'
+            disabled={isSubmitting}
           >
-            ADD
+            {isSubmitting ? 'Uploading...' : 'ADD'}
           </button>
         </form>
       </div>
