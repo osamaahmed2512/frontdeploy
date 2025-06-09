@@ -30,7 +30,7 @@ const Payment = () => {
       }
 
       console.log('Making payment request for course:', { courseId });
-      
+
       const response = await axios.post(
         'https://learnify.runasp.net/api/Payment/create-checkout-session',
         parseInt(courseId),
@@ -64,8 +64,8 @@ const Payment = () => {
       }
 
       setError(
-        err.response?.data?.message || 
-        err.message || 
+        err.response?.data?.message ||
+        err.message ||
         'An error occurred while processing your payment'
       );
     } finally {

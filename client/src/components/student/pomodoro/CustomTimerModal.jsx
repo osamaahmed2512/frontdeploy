@@ -4,11 +4,26 @@ import { FiClock, FiCoffee, FiX, FiCheck } from 'react-icons/fi';
 import { MdWorkOutline } from 'react-icons/md';
 import PropTypes from 'prop-types';
 
-const CustomTimerModal = ({ isOpen, closeModal, onSave }) => {
+const CustomTimerModal = ({
+    isOpen = false,
+    closeModal = () => { },
+    onSave = () => { },
+    executing = { customWork: 25, customBreak: 5 }
+}) => {
     const [customTimers, setCustomTimers] = useState({
-        work: 25,
-        break: 5
+        work: executing.customWork || 25,
+        break: executing.customBreak || 5
     });
+
+    // Reset values when modal opens
+    useEffect(() => {
+        if (isOpen) {
+            setCustomTimers({
+                work: executing.customWork || 25,
+                break: executing.customBreak || 5
+            });
+        }
+    }, [isOpen, executing]);
 
     // Handle ESC key
     useEffect(() => {
@@ -194,9 +209,13 @@ const CustomTimerModal = ({ isOpen, closeModal, onSave }) => {
 };
 
 CustomTimerModal.propTypes = {
-    isOpen: PropTypes.bool.isRequired,
-    closeModal: PropTypes.func.isRequired,
-    onSave: PropTypes.func.isRequired,
+    isOpen: PropTypes.bool,
+    closeModal: PropTypes.func,
+    onSave: PropTypes.func,
+    executing: PropTypes.shape({
+        customWork: PropTypes.number,
+        customBreak: PropTypes.number
+    })
 };
 
 export default CustomTimerModal;

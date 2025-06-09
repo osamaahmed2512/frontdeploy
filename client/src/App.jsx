@@ -4,6 +4,7 @@ import { Provider } from 'react-redux';
 import { store } from './store/Store';
 import { AppContextProvider } from './context/AppContext';
 import { TodoProvider } from './context/TodoContext';
+import { TimerProvider } from './context/TimerContext';
 import './styles/animation.css';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -140,200 +141,202 @@ const App = () => {
     const adminRoutes = ['/admin'];
     const teacherRoutes = ['/educator'];
     const commonRoutes = ['/profile'];
-    
+
     const allRoutes = [...publicRoutes, ...studentRoutes, ...adminRoutes, ...teacherRoutes, ...commonRoutes];
-    
+
     // Special handling for login route and logout process
     if (location.pathname === '/log-in') {
       return false;
     }
 
-    return !allRoutes.some(route => 
-      location.pathname === route || 
+    return !allRoutes.some(route =>
+      location.pathname === route ||
       location.pathname.startsWith(`${route}/`)
     );
   };
 
   return (
     <FlashCardProvider>
-    <Provider store={store}>
-      <AppContextProvider>
-        <TodoProvider>
-          <ToastContainer
-            position="bottom-right"
-            autoClose={5000}
-            hideProgressBar={false}
-            newestOnTop
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-            theme="colored"
-            limit={3}
-          />
-          <div className='text-default min-h-screen bg-white'>
-            {/* Hide NavBar from SignUp, LogIn, ForgotPassword, ResetPassword, Admin, Profile routes, Payment routes, AboutUs, PrivacyPolicy, ContactUs and NotFound */}
-            {!isSignUpStudentRoute && !isSignUpTeacherRoute && !isEducatorRoute &&
-             !isLogInRoute && !isForgotPasswordRoute && !isResetPasswordRoute && 
-             !isAdminRoute && !isProfileRoute && !isPaymentRoute && !isAboutUsRoute && 
-             !isPrivacyPolicyRoute && !isContactUsRoute && !isNotFoundPage() && <StudentNavbar />}
+      <Provider store={store}>
+        <AppContextProvider>
+          <TodoProvider>
+            <TimerProvider>
+              <ToastContainer
+                position="bottom-right"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="colored"
+                limit={3}
+              />
+              <div className='text-default min-h-screen bg-white'>
+                {/* Hide NavBar from SignUp, LogIn, ForgotPassword, ResetPassword, Admin, Profile routes, Payment routes, AboutUs, PrivacyPolicy, ContactUs and NotFound */}
+                {!isSignUpStudentRoute && !isSignUpTeacherRoute && !isEducatorRoute &&
+                  !isLogInRoute && !isForgotPasswordRoute && !isResetPasswordRoute &&
+                  !isAdminRoute && !isProfileRoute && !isPaymentRoute && !isAboutUsRoute &&
+                  !isPrivacyPolicyRoute && !isContactUsRoute && !isNotFoundPage() && <StudentNavbar />}
 
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<Home />} />
-              <Route path="/about-us" element={
-                <ProtectedRoute allowedRoles={['student', 'teacher']}>
-                  <AboutUs />
-                </ProtectedRoute>
-              } />
-              <Route path="/privacy-policy" element={
-                <ProtectedRoute allowedRoles={['student', 'teacher']}>
-                  <PrivacyPolicy />
-                </ProtectedRoute>
-              } />
-              <Route path="/contact-us" element={
-                <ProtectedRoute allowedRoles={['student', 'teacher']}>
-                  <ContactUs />
-                </ProtectedRoute>
-              } />
+                <Routes>
+                  {/* Public Routes */}
+                  <Route path="/" element={<Home />} />
+                  <Route path="/about-us" element={
+                    <ProtectedRoute allowedRoles={['student', 'teacher']}>
+                      <AboutUs />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/privacy-policy" element={
+                    <ProtectedRoute allowedRoles={['student', 'teacher']}>
+                      <PrivacyPolicy />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/contact-us" element={
+                    <ProtectedRoute allowedRoles={['student', 'teacher']}>
+                      <ContactUs />
+                    </ProtectedRoute>
+                  } />
 
-              {/* Auth Routes */}
-              <Route path="signup" element={<SignupChoice />} />
-              <Route path="signup/teacher" element={<TeacherSignup />} />
-              <Route path="signup/student" element={<StudentSignUp />} />
-              <Route path="log-in" element={<Login />} />
-              <Route path="forgot-password" element={<ForgotPassword />} />
-              <Route path="reset-password" element={<ResetPassword />} />
+                  {/* Auth Routes */}
+                  <Route path="signup" element={<SignupChoice />} />
+                  <Route path="signup/teacher" element={<TeacherSignup />} />
+                  <Route path="signup/student" element={<StudentSignUp />} />
+                  <Route path="log-in" element={<Login />} />
+                  <Route path="forgot-password" element={<ForgotPassword />} />
+                  <Route path="reset-password" element={<ResetPassword />} />
 
-              {/* Payment Routes */}
-              <Route path="/payment/:courseId" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <Payment />
-                </ProtectedRoute>
-              } />
-              <Route path="/payment/success" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <PaymentSuccess />
-                </ProtectedRoute>
-              } />
-              <Route path="/payment/cancel" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <PaymentCancel />
-                </ProtectedRoute>
-              } />
+                  {/* Payment Routes */}
+                  <Route path="/payment/:courseId" element={
+                    <ProtectedRoute allowedRoles={['student']}>
+                      <Payment />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/payment/success" element={
+                    <ProtectedRoute allowedRoles={['student']}>
+                      <PaymentSuccess />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/payment/cancel" element={
+                    <ProtectedRoute allowedRoles={['student']}>
+                      <PaymentCancel />
+                    </ProtectedRoute>
+                  } />
 
-              {/* Student Protected Routes */}
-              <Route path="/course-list" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <CoursesList />
-                </ProtectedRoute>
-              } />
-              <Route path="/course-list/:input" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <CoursesList />
-                </ProtectedRoute>
-              } />
-              <Route path="/recommended-courses" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <RecommendedCourseList />
-                </ProtectedRoute>
-              } />
-              <Route path="/recommended-courses/:input" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <RecommendedCourseList />
-                </ProtectedRoute>
-              } />
-              <Route path="/course/:id" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <CourseDetails />
-                </ProtectedRoute>
-              } />
-              <Route path="/my-enrollments" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <MyEnrollments />
-                </ProtectedRoute>
-              } />
-              <Route path="/player/:courseId" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <Player />
-                </ProtectedRoute>
-              } />
-              <Route path="/todo" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <TodoPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/pomodoro" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <Pomodoro />
-                </ProtectedRoute>
-              } />
+                  {/* Student Protected Routes */}
+                  <Route path="/course-list" element={
+                    <ProtectedRoute allowedRoles={['student']}>
+                      <CoursesList />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/course-list/:input" element={
+                    <ProtectedRoute allowedRoles={['student']}>
+                      <CoursesList />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/recommended-courses" element={
+                    <ProtectedRoute allowedRoles={['student']}>
+                      <RecommendedCourseList />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/recommended-courses/:input" element={
+                    <ProtectedRoute allowedRoles={['student']}>
+                      <RecommendedCourseList />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/course/:id" element={
+                    <ProtectedRoute allowedRoles={['student']}>
+                      <CourseDetails />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/my-enrollments" element={
+                    <ProtectedRoute allowedRoles={['student']}>
+                      <MyEnrollments />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/player/:courseId" element={
+                    <ProtectedRoute allowedRoles={['student']}>
+                      <Player />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/todo" element={
+                    <ProtectedRoute allowedRoles={['student']}>
+                      <TodoPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/pomodoro" element={
+                    <ProtectedRoute allowedRoles={['student']}>
+                      <Pomodoro />
+                    </ProtectedRoute>
+                  } />
 
-              {/* Profile Routes */}
-              <Route path="/profile" element={
-                <ProtectedRoute allowedRoles={['student', 'teacher', 'admin']}>
-                  <ProfileLayout />
-                </ProtectedRoute>
-              }>
-                <Route index element={<ProfileOverview />} />
-                <Route path="settings" element={<MyInfo />} />
-                <Route path="flashcards" element={<ProfileFlashcards />} />
-                <Route path="todos" element={
-                  <ProtectedRoute allowedRoles={['student', 'teacher']}>
-                    <ProfileTodos />
-                  </ProtectedRoute>
-                } />
-                <Route path="pomodoro" element={<ProfilePomodoro />} />
-                <Route path="security" element={<SecuritySettings />} />
-              </Route>
+                  {/* Profile Routes */}
+                  <Route path="/profile" element={
+                    <ProtectedRoute allowedRoles={['student', 'teacher', 'admin']}>
+                      <ProfileLayout />
+                    </ProtectedRoute>
+                  }>
+                    <Route index element={<ProfileOverview />} />
+                    <Route path="settings" element={<MyInfo />} />
+                    <Route path="flashcards" element={<ProfileFlashcards />} />
+                    <Route path="todos" element={
+                      <ProtectedRoute allowedRoles={['student', 'teacher']}>
+                        <ProfileTodos />
+                      </ProtectedRoute>
+                    } />
+                    <Route path="pomodoro" element={<ProfilePomodoro />} />
+                    <Route path="security" element={<SecuritySettings />} />
+                  </Route>
 
-              {/* Educator Routes */}
-              <Route path="educator" element={
-                <ProtectedRoute allowedRoles={['teacher']}>
-                  <Educator />
-                </ProtectedRoute>
-              }>
-                <Route index element={<Dashboard />} />
-                <Route path="add-course" element={<AddCourse />} />
-                <Route path="my-courses" element={<MyCourses />} />
-                <Route path="student-enrolled" element={<StudentsEnrolled />} />
-              </Route>
+                  {/* Educator Routes */}
+                  <Route path="educator" element={
+                    <ProtectedRoute allowedRoles={['teacher']}>
+                      <Educator />
+                    </ProtectedRoute>
+                  }>
+                    <Route index element={<Dashboard />} />
+                    <Route path="add-course" element={<AddCourse />} />
+                    <Route path="my-courses" element={<MyCourses />} />
+                    <Route path="student-enrolled" element={<StudentsEnrolled />} />
+                  </Route>
 
-              {/* Admin Routes */}
-              <Route path="admin" element={
-                <ProtectedRoute allowedRoles={['admin']}>
-                  <Admin />
-                </ProtectedRoute>
-              }>
-                <Route index element={<AdminDashboard />} />
-                <Route path="manage-users" element={<UsersManagement />} />
-                <Route path="manage-courses" element={<CourseManagement />} />
-                <Route path="manage-enrollments" element={<EnrollmentsManagement />} />
-                <Route path="manage-payment" element={<PaymentManagement />} />
-                <Route path="manage-support" element={<SupportManagement />} />
-                <Route path="pending-registrations" element={<PendingRegistrations />} />
-                <Route path="manage-categories" element={<CategoriesManagement />} />
-              </Route>
+                  {/* Admin Routes */}
+                  <Route path="admin" element={
+                    <ProtectedRoute allowedRoles={['admin']}>
+                      <Admin />
+                    </ProtectedRoute>
+                  }>
+                    <Route index element={<AdminDashboard />} />
+                    <Route path="manage-users" element={<UsersManagement />} />
+                    <Route path="manage-courses" element={<CourseManagement />} />
+                    <Route path="manage-enrollments" element={<EnrollmentsManagement />} />
+                    <Route path="manage-payment" element={<PaymentManagement />} />
+                    <Route path="manage-support" element={<SupportManagement />} />
+                    <Route path="pending-registrations" element={<PendingRegistrations />} />
+                    <Route path="manage-categories" element={<CategoriesManagement />} />
+                  </Route>
 
-              {/* Loading Route */}
-              <Route path="/loading/:path" element={<Loading />} />
+                  {/* Loading Route */}
+                  <Route path="/loading/:path" element={<Loading />} />
 
-              {/* 404 Route with improved handling */}
-              <Route path="*" element={
-                (() => {
-                  const isLoggingOut = !localStorage.getItem('token') && location.pathname !== '/log-in';
-                  if (isLoggingOut) {
-                    return <Navigate to="/log-in" replace />;
-                  }
-                  return <NotFound />;
-                })()
-              } />
-            </Routes>
-          </div>
-        </TodoProvider>
-      </AppContextProvider>
-    </Provider>
+                  {/* 404 Route with improved handling */}
+                  <Route path="*" element={
+                    (() => {
+                      const isLoggingOut = !localStorage.getItem('token') && location.pathname !== '/log-in';
+                      if (isLoggingOut) {
+                        return <Navigate to="/log-in" replace />;
+                      }
+                      return <NotFound />;
+                    })()
+                  } />
+                </Routes>
+              </div>
+            </TimerProvider>
+          </TodoProvider>
+        </AppContextProvider>
+      </Provider>
     </FlashCardProvider>
   );
 };

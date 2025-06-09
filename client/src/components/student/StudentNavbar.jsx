@@ -9,6 +9,7 @@ import { IoMdArrowDropdown } from 'react-icons/io';
 import { FiUser, FiSettings, FiLogOut } from 'react-icons/fi';
 import { Menu, Transition } from '@headlessui/react';
 import { Fragment } from 'react';
+import TimerStatus from '../TimerStatus';
 
 // Menu items configuration
 const createMenuItem = (icon, label, path, description, className = '') => ({
@@ -57,28 +58,28 @@ const StudentNavbar = () => {
 
   const UserAvatar = ({ size = 'normal', showStatus = true, open = false }) => (
     <div className="relative">
-      <div 
+      <div
         className={`
           ${size === 'normal' ? 'w-10 h-10' : 'w-8 h-8'} 
           rounded-full flex items-center justify-center overflow-hidden
           transition-all duration-300 
-          ${open ? 
-            'bg-blue-100 ring-2 ring-blue-200 shadow-lg' : 
+          ${open ?
+            'bg-blue-100 ring-2 ring-blue-200 shadow-lg' :
             'bg-gray-100 hover:bg-white hover:shadow-md'}
           ${showStatus ? 'ring-offset-2' : ''}
         `}
       >
         {user?.image_url ? (
-          <img 
+          <img
             src={user.image_url}
             alt={user.name}
             className="w-full h-full object-cover"
           />
         ) : (
-          <FiUser 
-            size={size === 'normal' ? 20 : 18} 
+          <FiUser
+            size={size === 'normal' ? 20 : 18}
             className={`transition-colors duration-300 
-              ${open ? 'text-blue-600' : 'text-gray-600'}`} 
+              ${open ? 'text-blue-600' : 'text-gray-600'}`}
           />
         )}
       </div>
@@ -119,10 +120,10 @@ const StudentNavbar = () => {
               transition-all duration-300 
               border border-transparent
               cursor-pointer outline-none focus:outline-none
-              ${open ? 
-                'bg-blue-50 border-blue-200 shadow-inner' : 
+              ${open ?
+                'bg-blue-50 border-blue-200 shadow-inner' :
                 isMobile ? 'hover:bg-white/50 active:scale-95' :
-                'hover:bg-white/80 hover:border-gray-200 hover:shadow-lg hover:-translate-y-0.5'
+                  'hover:bg-white/80 hover:border-gray-200 hover:shadow-lg hover:-translate-y-0.5'
               }
             `}
           >
@@ -135,11 +136,11 @@ const StudentNavbar = () => {
                 {user?.name}
               </span>
             )}
-            <IoMdArrowDropdown 
+            <IoMdArrowDropdown
               className={`
                 transition-all duration-300 
                 ${open ? 'rotate-180 text-blue-600' : 'text-gray-500'}
-              `} 
+              `}
               size={isMobile ? 18 : 20}
             />
           </Menu.Button>
@@ -153,7 +154,7 @@ const StudentNavbar = () => {
             leaveFrom="transform opacity-100 scale-100"
             leaveTo="transform opacity-0 scale-95"
           >
-            <Menu.Items 
+            <Menu.Items
               className={`
                 ${isMobile ? 'fixed right-3 top-[74px]' : 'absolute right-0 mt-2'} 
                 w-80 origin-top-right rounded-xl bg-white shadow-2xl py-3 
@@ -168,7 +169,7 @@ const StudentNavbar = () => {
                     <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-50 to-white
                       shadow-inner flex items-center justify-center overflow-hidden">
                       {user?.image_url ? (
-                        <img 
+                        <img
                           src={user.image_url}
                           alt={user.name}
                           className="w-full h-full object-cover"
@@ -202,18 +203,16 @@ const StudentNavbar = () => {
                       item.path ? (
                         <Link
                           to={item.path}
-                          className={`flex items-center px-4 py-3 ${
-                            active ? 'bg-gray-50' : ''
-                          } cursor-pointer group transition-colors duration-150 outline-none focus:outline-none`}
+                          className={`flex items-center px-4 py-3 ${active ? 'bg-gray-50' : ''
+                            } cursor-pointer group transition-colors duration-150 outline-none focus:outline-none`}
                         >
                           <MenuItemContent item={item} />
                         </Link>
                       ) : (
                         <button
                           onClick={item.onClick}
-                          className={`w-full flex items-center px-4 py-3 ${
-                            active ? 'bg-gray-50' : ''
-                          } cursor-pointer group transition-colors duration-150 outline-none focus:outline-none`}
+                          className={`w-full flex items-center px-4 py-3 ${active ? 'bg-gray-50' : ''
+                            } cursor-pointer group transition-colors duration-150 outline-none focus:outline-none`}
                         >
                           <MenuItemContent item={item} />
                         </button>
@@ -243,22 +242,22 @@ const StudentNavbar = () => {
         alt="Logo"
         className="h-9 sm:h-10 cursor-pointer hover:opacity-90 transition-opacity"
       />
-      
+
       {/* Desktop Navigation */}
       <div className="hidden md:flex items-center gap-6 text-gray-600">
         <div className="flex items-center gap-6">
           {isAuthenticated && (
             <>
-              <Link 
-                to="/course-list" 
+              <Link
+                to="/course-list"
                 className="text-sm font-medium hover:text-blue-600 
                   transition-colors"
               >
                 All Courses
               </Link>
               <span className="text-gray-300">|</span>
-              <Link 
-                to="/my-enrollments" 
+              <Link
+                to="/my-enrollments"
                 className="text-sm font-medium hover:text-blue-600 
                   transition-colors"
               >
@@ -269,7 +268,10 @@ const StudentNavbar = () => {
         </div>
 
         {isAuthenticated ? (
-          <UserMenu />
+          <div className="flex items-center gap-6">
+            <TimerStatus />
+            <UserMenu />
+          </div>
         ) : (
           <div className="flex items-center gap-6">
             <Link
@@ -283,16 +285,16 @@ const StudentNavbar = () => {
                 ease">
                 <span className="flex items-center">
                   Login
-                  <svg 
-                    className="w-4 h-4 ml-2" 
-                    fill="none" 
-                    stroke="currentColor" 
+                  <svg
+                    className="w-4 h-4 ml-2"
+                    fill="none"
+                    stroke="currentColor"
                     viewBox="0 0 24 24"
                   >
-                    <path 
-                      strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth="2" 
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
                       d="M14 5l7 7m0 0l-7 7m7-7H3"
                     />
                   </svg>
@@ -330,8 +332,8 @@ const StudentNavbar = () => {
                 Courses
               </Link>
               <span className="text-gray-300 px-1">|</span>
-              <Link 
-                to="/my-enrollments" 
+              <Link
+                to="/my-enrollments"
                 className="text-sm font-medium px-2 py-1.5 rounded-lg hover:bg-white/50
                   transition-colors"
               >
@@ -339,7 +341,10 @@ const StudentNavbar = () => {
               </Link>
             </div>
 
-            <UserMenu isMobile={true} />
+            <div className="flex items-center gap-3">
+              <TimerStatus />
+              <UserMenu isMobile={true} />
+            </div>
           </div>
         ) : (
           <div className="flex items-center gap-2 sm:gap-3">

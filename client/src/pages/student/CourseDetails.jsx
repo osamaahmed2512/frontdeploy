@@ -53,7 +53,9 @@ const CourseDetails = () => {
   };
 
   const handleEnrollment = () => {
-    if (!courseData.is_subscribed) {
+    if (courseData.is_subscribed) {
+      navigate(`/player/${id}`);
+    } else {
       const finalPrice = courseData.discounted_price || courseData.price;
       navigate(`/payment/${id}`, {
         state: {
@@ -244,14 +246,9 @@ const CourseDetails = () => {
 
             <button
               onClick={handleEnrollment}
-              disabled={courseData.is_subscribed}
-              className={`md:mt-6 mt-4 w-full py-3 cursor-pointer rounded font-medium
-                ${courseData.is_subscribed
-                  ? "bg-gray-400 text-white cursor-not-allowed"
-                  : "bg-blue-600 text-white hover:bg-sky-700"
-                }`}
+              className="md:mt-6 mt-4 w-full py-3 cursor-pointer rounded font-medium bg-blue-600 text-white hover:bg-sky-700"
             >
-              {courseData.is_subscribed ? "Already Enrolled" : "Enroll Now"}
+              {courseData.is_subscribed ? "Go to Course" : "Enroll Now"}
             </button>
 
             <div className="pt-6">

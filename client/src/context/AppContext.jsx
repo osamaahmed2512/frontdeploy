@@ -12,10 +12,10 @@ export const AppContext = createContext({
     user: null,
     isAuthenticated: false,
     loading: false,
-    login: () => {},
-    logout: () => {},
-    updateUserProfile: () => {},
-    navigate: () => {},
+    login: () => { },
+    logout: () => { },
+    updateUserProfile: () => { },
+    navigate: () => { },
     currency: '',
     allCourses: [],
     enrolledCourses: [],
@@ -23,21 +23,21 @@ export const AppContext = createContext({
     calculateNoOfLectures: () => 0,
     calculateCourseDuration: () => '',
     calculateChapterTime: () => '',
-    fetchUserEnrolledCourses: () => {},
+    fetchUserEnrolledCourses: () => { },
     isEducator: false,
-    setIsEducator: () => {},
+    setIsEducator: () => { },
     isAdmin: false,
-    setIsAdmin: () => {},
+    setIsAdmin: () => { },
     pomodoroState: {
         isActive: false,
         duration: 0,
         isPlaying: false,
         timerKey: Date.now(),
         remainingTime: null,
-        onComplete: () => {},
-        onPause: () => {}
+        onComplete: () => { },
+        onPause: () => { }
     },
-    setPomodoroState: () => {}
+    setPomodoroState: () => { }
 });
 
 export const AppContextProvider = ({ children }) => {
@@ -49,7 +49,7 @@ export const AppContextProvider = ({ children }) => {
     const user = useSelector((state) => state.user.user);
     const isAuthenticated = useSelector((state) => state.user.isAuthenticated);
     const loading = useSelector((state) => state.user.loading);
-    
+
     // Course State
     const [allCourses, setAllCourses] = useState([]);
     const [enrolledCourses, setEnrolledCourses] = useState([]);
@@ -65,8 +65,8 @@ export const AppContextProvider = ({ children }) => {
         isPlaying: false,
         timerKey: Date.now(),
         remainingTime: null,
-        onComplete: () => {},
-        onPause: () => {}
+        onComplete: () => { },
+        onPause: () => { }
     });
 
     // Initialize auth state
@@ -152,7 +152,7 @@ export const AppContextProvider = ({ children }) => {
     const calculateCourseDuration = (course) => {
         if (!course.courseContent) return "0 minutes";
         let time = 0;
-        course.courseContent.forEach(chapter => 
+        course.courseContent.forEach(chapter =>
             chapter.chapterContent?.forEach(lecture => time += (lecture.lectureDuration || 0))
         );
         return humanizeDuration(time * 60 * 1000, { units: ["h", "m"] });
@@ -160,7 +160,7 @@ export const AppContextProvider = ({ children }) => {
 
     const calculateNoOfLectures = (course) => {
         if (!course.courseContent) return 0;
-        return course.courseContent.reduce((total, chapter) => 
+        return course.courseContent.reduce((total, chapter) =>
             total + (Array.isArray(chapter.chapterContent) ? chapter.chapterContent.length : 0), 0
         );
     };

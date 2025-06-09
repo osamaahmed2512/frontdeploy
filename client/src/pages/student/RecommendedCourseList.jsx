@@ -16,31 +16,33 @@ const RecommendedCourseList = () => {
   const [recommendedCourses, setRecommendedCourses] = useState([]);
   const [filteredCourses, setFilteredCourses] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const BASE_URL = 'https://learnify.runasp.net';
 
   useEffect(() => {
     const fetchRecommendations = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('https://learnify.runasp.net/api/Recommendations', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'accept': 'application/json'
-          }
-        });
+        const headers = token ? {
+          'Authorization': `Bearer ${token}`,
+          'accept': 'application/json'
+        } : {
+          'accept': 'application/json'
+        };
+
+        const response = await axios.get(`${BASE_URL}/api/Recommendations`, { headers });
 
         if (response.data.success) {
           const transformedCourses = response.data.data.map(course => ({
-            _id: course["Course ID"],
-            courseTitle: course["Course Title"],
-            courseThumbnail: course.ImgUrl || 'default-image-url.jpg',
-            coursePrice: course.price,
+            id: course["Course ID"],
+            name: course["Course Title"],
+            img_url: course.ImgUrl,
+            average_rating: course.AverageRating,
+            level_of_course: course["Difficulty Level"],
+            course_category: course["CourseCategory"],
+            price: course.price,
             discount: course.discount,
-            courseRatings: Array(Math.floor(course.AverageRating)).fill({ 
-              rating: Number(course.AverageRating.toFixed(2)) 
-            }),
-            courseCategory: course["CourseCategory"],
-            difficultyLevel: course["Difficulty Level"],
-            discountedPrice: course.discounted_price
+            discounted_price: course.discounted_price,
+            no_of_students: 0 // This field is not provided in the API response
           }));
           setRecommendedCourses(transformedCourses);
           setFilteredCourses(transformedCourses);
@@ -61,7 +63,7 @@ const RecommendedCourseList = () => {
         setFilteredCourses(
           tempCourses.filter(
             (item) =>
-              item.courseTitle.toLowerCase().includes(input.toLowerCase())
+              item.name.toLowerCase().includes(input.toLowerCase())
           )
         );
       } else {

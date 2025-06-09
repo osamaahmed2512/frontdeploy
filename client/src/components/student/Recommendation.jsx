@@ -14,36 +14,39 @@ const Recommendation = () => {
   const swiperRef = useRef(null);
   const [isBeginning, setIsBeginning] = useState(true);
   const [isEnd, setIsEnd] = useState(false);
+  const BASE_URL = 'https://learnify.runasp.net';
 
   useEffect(() => {
     const fetchRecommendations = async () => {
       try {
         const token = localStorage.getItem('token');
-        const response = await axios.get('https://learnify.runasp.net/api/Recommendations', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'accept': 'application/json'
-          }
-        });
+        const headers = token ? {
+          'Authorization': `Bearer ${token}`,
+          'accept': 'application/json'
+        } : {
+          'accept': 'application/json'
+        };
+
+        const response = await axios.get(`${BASE_URL}/api/Recommendations`, { headers });
 
         if (response.data.success) {
           const transformedCourses = response.data.data.map(course => ({
-            _id: course["Course ID"],
-            courseTitle: course["Course Title"],
-            courseThumbnail: course.ImgUrl || 'default-image-url.jpg',
-            coursePrice: course.price,
+            id: course["Course ID"],
+            name: course["Course Title"],
+            img_url: course.ImgUrl,
+            average_rating: course.AverageRating,
+            level_of_course: course["Difficulty Level"],
+            course_category: course["CourseCategory"],
+            price: course.price,
             discount: course.discount,
-            courseRatings: Array(Math.floor(course.AverageRating)).fill({ 
-              rating: Number(course.AverageRating.toFixed(2)) 
-            }),
-            courseCategory: course["CourseCategory"],
-            difficultyLevel: course["Difficulty Level"],
-            discountedPrice: course.discounted_price
+            discounted_price: course.discounted_price,
+            no_of_students: 0 // This field is not provided in the API response
           }));
           setRecommendedCourses(transformedCourses);
         }
         setLoading(false);
       } catch (err) {
+        console.error('Error fetching recommendations:', err);
         setError(err.message);
         setLoading(false);
       }
@@ -124,7 +127,7 @@ const Recommendation = () => {
               <Swiper
                 ref={swiperRef}
                 modules={[Pagination, Autoplay]}
-                pagination={{ 
+                pagination={{
                   clickable: true,
                   dynamicBullets: true
                 }}
@@ -139,19 +142,19 @@ const Recommendation = () => {
                 speed={800}
                 onSlideChange={handleSlideChange}
                 breakpoints={{
-                  320: { 
+                  320: {
                     slidesPerView: 1,
                     spaceBetween: 15
                   },
-                  640: { 
+                  640: {
                     slidesPerView: 2,
                     spaceBetween: 20
                   },
-                  768: { 
+                  768: {
                     slidesPerView: 3,
                     spaceBetween: 20
                   },
-                  1024: { 
+                  1024: {
                     slidesPerView: 4,
                     spaceBetween: 20
                   }
@@ -166,9 +169,9 @@ const Recommendation = () => {
               </Swiper>
 
               <div className="mb-15">
-                <Link 
-                  to="/recommended-courses" 
-                  onClick={() => scrollTo(0, 0)} 
+                <Link
+                  to="/recommended-courses"
+                  onClick={() => scrollTo(0, 0)}
                   className="inline-block px-8 py-3 bg-transparent text-sky-500 font-semibold rounded-lg
                     transition-all duration-300 hover:bg-sky-500 hover:text-white
                     border-2 border-sky-500 hover:shadow-lg hover:-translate-y-1"
